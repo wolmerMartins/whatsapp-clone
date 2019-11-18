@@ -18,8 +18,35 @@ class User extends Model {
         return User.findByEmail(this.email).set(this.toJSON());
     }
 
+    addContact(contact) {
+        return User.getContactsRef(this.email)
+            .doc(btoa(contact.email)).set(contact.toJSON());
+    }
+
+    getContacts() {
+        return new Promise((s, f) => {
+            User.getContactsRef(this.email).onSnapshot(docs => {
+                let contacts = [];
+                
+                docs.forEach(doc => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    
+                    contacts.push(data);
+                });
+
+                this.trigger('contactschange', docs);
+                s(contacts);
+            });
+        });
+    }
+
     static getRef() {
         return Firebase.db().collection('/users');
+    }
+
+    static getContactsRef(id) {
+        return User.getRef().doc(id).collection('contacts');
     }
 
     static findByEmail(email) {
