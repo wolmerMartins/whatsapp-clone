@@ -1,4 +1,6 @@
 import Model from './Model';
+import Format from '../utils/Format';
+import Firebase from '../utils/Firebase';
 
 class Message extends Model {
     constructor() {
@@ -248,16 +250,16 @@ class Message extends Model {
                 break;
             default:
                 div.innerHTML = `
-                    <div class="font-style _3DFk6 tail">
+                    <div class="font-style _3DFk6 tail" id="_${this.id}">
                         <span class="tail-container"></span>
                         <span class="tail-container highlight"></span>
                         <div class="Tkt2p">
                             <div class="_3zb-j ZhF0n">
-                                <span dir="ltr" class="selectable-text invisible-space message-text">Oi!</span>
+                                <span dir="ltr" class="selectable-text invisible-space message-text">${this.content}</span>
                             </div>
                             <div class="_2f-RV">
                                 <div class="_1DZAH">
-                                    <span class="msg-time">11:33</span>
+                                    <span class="msg-time">${Format.timestampToTime(this.timestamp)}</span>
                                 </div>
                             </div>
                         </div>
@@ -270,6 +272,28 @@ class Message extends Model {
         div.firstElementChild.classList.add(className);
 
         return div;
+    }
+
+    static getRef(chatId) {
+        return Firebase.db().collection('chats').doc(chatId).collection('messages');
+    }
+
+    static send(chatId, from, type, content) {
+        return Message.getRef(chatId).add({
+            content,
+            timestamp: new Date(),
+            status: 'wait',
+            from,
+            type
+        });
+    }
+
+    get id() {
+        return this._data.id;
+    }
+
+    set id(id) {
+        this._data.id = id;
     }
 
     get content() {
@@ -305,4 +329,4 @@ class Message extends Model {
     }
 }
 
-module.exports = Message;
+export default Message;

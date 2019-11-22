@@ -17,4 +17,17 @@ export default class Format {
         if (hours > 0) return `${hours}:${this.addZero(minutes)}:${this.addZero(seconds)}`;
         return `${minutes}:${this.addZero(seconds)}`;
     }
+
+    static dateToTime(date, locale = 'pt-BR') {
+        return date.toLocaleTimeString(locale, {
+            hours: '2-digit',
+            minutes: '2-digit'
+        });
+    }
+
+    static timestampToTime(timestamp) {
+        return (timestamp && typeof timestamp.toDate === 'function')
+            ? Format.dateToTime(timestamp.toDate())
+            : '';
+    }
 }
