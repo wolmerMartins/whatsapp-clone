@@ -143,10 +143,17 @@ export default class WhatsAppController {
         this.el.main.css({
             display: 'flex'
         });
+        
+        this.el.panelMessagesContainer.innerHTML = '';
 
         Message.getRef(this._contactActive.chatId)
             .orderBy('timestamp').onSnapshot(docs => {
-                this.el.panelMessagesContainer.innerHTML = '';
+
+                let scrollTop = this.el.panelMessagesContainer.scrollTop;
+                let scrollTopMax = (this.el.panelMessagesContainer.scrollHeight
+                    - this.el.panelMessagesContainer.offsetHeight);
+                
+                let autoScroll = (scrollTop >= scrollTopMax);
 
                 docs.forEach(doc => {
                     let data = doc.data();
@@ -162,6 +169,14 @@ export default class WhatsAppController {
                         this.el.panelMessagesContainer.appendChild(view);
                     }
                 });
+
+                if (autoScroll) {
+                    this.el.panelMessagesContainer.scrollTop =
+                        (this.el.panelMessagesContainer.scrollHeight
+                            - this.el.panelMessagesContainer.offsetHeight);
+                } else {
+                    this.el.panelMessagesContainer.scrollTop = scrollTop;
+                }
             });
     }
 
