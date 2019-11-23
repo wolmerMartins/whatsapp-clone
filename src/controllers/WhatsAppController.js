@@ -149,11 +149,13 @@ export default class WhatsAppController {
         Message.getRef(this._contactActive.chatId)
             .orderBy('timestamp').onSnapshot(docs => {
 
-                let scrollTop = this.el.panelMessagesContainer.scrollTop;
+                let scrollTop = Math.ceil(this.el.panelMessagesContainer.scrollTop + 1);
                 let scrollTopMax = (this.el.panelMessagesContainer.scrollHeight
                     - this.el.panelMessagesContainer.offsetHeight);
                 
                 let autoScroll = (scrollTop >= scrollTopMax);
+                
+                console.log('scrollTop', scrollTop, 'scrollTopMax', scrollTopMax, 'autoScroll', autoScroll)
 
                 docs.forEach(doc => {
                     let data = doc.data();
