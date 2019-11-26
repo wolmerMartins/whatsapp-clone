@@ -126,7 +126,7 @@ export default class WhatsAppController {
     }
 
     setActiveChat(contact) {
-        if (this._contactActive) Message.getRef(this._contactActive).onSnapshot(()=>{});
+        if (this._contactActive) Message.getRef(this._contactActive.chatId).onSnapshot(()=>{});
 
         this._contactActive = contact;
 
@@ -155,20 +155,24 @@ export default class WhatsAppController {
                 
                 let autoScroll = (scrollTop >= scrollTopMax);
                 
-                console.log('scrollTop', scrollTop, 'scrollTopMax', scrollTopMax, 'autoScroll', autoScroll)
-
                 docs.forEach(doc => {
                     let data = doc.data();
                     data.id = doc.id;
+                    
+                    let message = new Message();
+                    message.fromJSON(data);
+                    
+                    let me = (data.from === this._user.email);
 
-                    if (!document.querySelector(`#_${data.id}`)) {
-                        let message = new Message();
-                        message.fromJSON(data);
+                    if (!this.el.panelMessagesContainer.querySelector(`#_${data.id}`)) {
+                        if (!me) doc.ref.set({ status: 'read' }, { merge: true });
 
-                        let me = (data.from === this._user.email);
                         let view = message.getViewElement(me);
 
                         this.el.panelMessagesContainer.appendChild(view);
+                    } else if (me) {
+                        let msgEl = this.el.panelMessagesContainer.querySelector(`#_${data.id}`);
+                        msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
                     }
                 });
 
@@ -251,6 +255,16 @@ export default class WhatsAppController {
     }
 
     initEvents() {
+        this.el.inputSearchContacts.on('keyup', e => {
+            if (this.el.inputSearchContacts.value.length) {
+                this.el.inputSearchContactsPlaceholder.hide();
+            } else {
+                this.el.inputSearchContactsPlaceholder.show();
+            }
+
+            this._user.getContacts(this.el.inputSearchContacts.value);
+        });
+
         this.el.myPhoto.on('click', e => {
             this.closeAllLeftPanel();
             this.el.panelEditProfile.show();
