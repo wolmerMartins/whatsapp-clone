@@ -346,8 +346,7 @@ export default class WhatsAppController {
         });
 
         this.el.inputPhoto.on('change', e => {
-            console.log('inputPhoto', e.target.files);
-            [...e.target.files].forEach(file => console.log('inputPhoto file', file));
+            [...e.target.files].forEach(file => Message.sendImage(this._contactActive.chatId, this._user.email, file));
         });
 
         this.el.btnAttachPhoto.on('click', e => {

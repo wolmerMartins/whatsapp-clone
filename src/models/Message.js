@@ -73,13 +73,8 @@ class Message extends Model {
                                             </div>
                                         </div>
                                     </div>
-                                    <img src="#" class="_1JVSX message-photo" style="width: 100%; display:none">
+                                    <img src="${this.content}" class="_1JVSX message-photo" style="width: 100%; display:none">
                                     <div class="_1i3Za"></div>
-                                </div>
-                                <div class="message-container-legend">
-                                    <div class="_3zb-j ZhF0n">
-                                        <span dir="ltr" class="selectable-text invisible-space copyable-text message-text">Texto da foto</span>
-                                    </div>
                                 </div>
                                 <div class="_2TvOE">
                                     <div class="_1DZAH text-white" role="button">
@@ -98,6 +93,13 @@ class Message extends Model {
                         </div>
                     </div>
                 `;
+
+                div.querySelector('.message-photo').on('load', e => {
+                    div.querySelector('._34Olu').hide();
+                    div.querySelector('.message-photo').show();
+                    div.querySelector('._3v3PK').css({ height: 'auto' });
+                });
+                
                 break;
             case 'document':
                 div.innerHTML = `
@@ -222,7 +224,7 @@ class Message extends Model {
                 break;
             default:
                 div.innerHTML = `
-                    <div class="font-style _3DFk6 tail" id="_${this.id}">
+                    <div class="font-style _3DFk6 tail">
                         <span class="tail-container"></span>
                         <span class="tail-container highlight"></span>
                         <div class="Tkt2p">
@@ -246,29 +248,10 @@ class Message extends Model {
             div.querySelector('.message-time').parentElement.appendChild(this.getStatusViewElement());
         }
         
+        div.firstElementChild.id = `_${this.id}`;
         div.firstElementChild.classList.add(className);
 
         return div;
-    }
-
-    static getRef(chatId) {
-        return Firebase.db().collection('chats').doc(chatId).collection('messages');
-    }
-
-    static send(chatId, from, type, content) {
-        return new Promise((s, f) => {
-            Message.getRef(chatId).add({
-                content,
-                timestamp: new Date(),
-                status: 'wait',
-                from,
-                type
-            }).then(result => result.parent.doc(result.id).set({
-                status: 'sent'
-            }, {
-                merge: true
-            }).then(() => s()));
-        });
     }
 
     getStatusViewElement() {
@@ -315,6 +298,39 @@ class Message extends Model {
         }
 
         return div;
+    }
+
+    static getRef(chatId) {
+        return Firebase.db().collection('chats').doc(chatId).collection('messages');
+    }
+
+    static send(chatId, from, type, content) {
+        return new Promise((s, f) => {
+            Message.getRef(chatId).add({
+                content,
+                timestamp: new Date(),
+                status: 'wait',
+                from,
+                type
+            }).then(result => result.parent.doc(result.id).set({
+                status: 'sent'
+            }, {
+                merge: true
+            }).then(() => s()));
+        });
+    }
+
+    static sendImage(chatId, from, file) {
+        return new Promise((s, f) => {
+            let fileRef = `${Date.now()}_${file.name}`;
+            let uploadTask = Firebase.hd().ref(from).child(fileRef).put(file);
+
+            uploadTask.on('state_changed',
+                e => console.log('upload', e),
+                err => console.error('IMAGE UPLOAD', err),
+                () => Firebase.hd().ref(from).child(fileRef).getDownloadURL()
+                    .then(url => Message.send(chatId, from, 'image', url).then(() => s())))
+        });
     }
 
     get id() {
