@@ -1,5 +1,6 @@
 import Model from './Model';
 import Format from '../utils/Format';
+import Base64 from '../utils/Base64';
 import Firebase from '../utils/Firebase';
 
 class Message extends Model {
@@ -331,6 +332,10 @@ class Message extends Model {
                 () => Firebase.hd().ref(from).child(fileRef).getDownloadURL()
                     .then(url => Message.send(chatId, from, 'image', url).then(() => s())))
         });
+    }
+
+    static sendDocument(chatId, from, file, preview) {
+
     }
 
     get id() {

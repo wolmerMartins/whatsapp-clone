@@ -4,6 +4,7 @@ import MicrophoneController from './MicrophoneController';
 import DocumentPreviewController from './DocumentPreviewController';
 import Firebase from '../utils/Firebase';
 import Message from '../models/Message';
+import Base64 from '../utils/Base64';
 import User from '../models/User';
 import Chat from '../models/Chat';
 
@@ -371,11 +372,39 @@ export default class WhatsAppController {
         });
 
         this.el.btnSendPicture.on('click', e => {
-            console.log(this.el.pictureCamera.src)
+            this.el.btnSendPicture.disabled = true;
+
+            let mimeType = Base64.getMimeType(this.el.pictureCamera.src);
+            let ext = mimeType.split('/')[1];
+            let filename = `camera${Date.now()}.${ext}`;
+
+            let picture = new Image();
+            picture.src = this.el.pictureCamera.src;
+            picture.onload = e => {
+                let canvas = document.createElement('canvas');
+                let context = canvas.getContext('2d');
+
+                canvas.width = picture.width;
+                canvas.height = picture.height;
+
+                context.translate(picture.width, 0);
+                context.scale(-1, 1);
+                context.drawImage(picture, 0, 0, canvas.width, canvas.height);
+
+                fetch(canvas.toDataURL(mimeType))
+                    .then(res => res.arrayBuffer())
+                    .then(buffer => new File([buffer], filename, { type: mimeType }))
+                    .then(file => {
+                        Message.sendImage(this._contactActive.chatId, this._user.email, file);
+                        this.el.btnSendPicture.disabled = false;
+                        this.el.btnClosePanelCamera.click();
+                    });
+            };
         });
 
         this.el.btnClosePanelCamera.on('click', e => {
             this._camera.stop();
+            this.el.btnReshootPanelCamera.click();
             this.closePanelShowMessages();
         });
 
@@ -387,7 +416,10 @@ export default class WhatsAppController {
         });
 
         this.el.btnSendDocument.on('click', e => {
-            console.log('send document');
+            let file = this.el.inputDocument.files[0];
+            let base64 = this.el.imgPanelDocumentPreview.src;
+
+            Message.sendDocument(this._contactActive.chatId, this._user.email, file, base64);
         });
 
         this.el.btnClosePanelDocumentPreview.on('click', e => {
