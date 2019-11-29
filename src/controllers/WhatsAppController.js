@@ -171,9 +171,16 @@ export default class WhatsAppController {
                         let view = message.getViewElement(me);
 
                         this.el.panelMessagesContainer.appendChild(view);
-                    } else if (me) {
-                        let msgEl = this.el.panelMessagesContainer.querySelector(`#_${data.id}`);
-                        msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
+                    } else {
+                        if (me) {
+                            let msgEl = this.el.panelMessagesContainer.querySelector(`#_${data.id}`);
+                            msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
+                        }
+
+                        if (data.type === 'document' && data.fileType) {
+                            this.el.panelMessagesContainer.querySelector(`#_${data.id}`)
+                                .innerHTML = message.getViewElement(me).innerHTML;
+                        }
                     }
                 });
 
@@ -419,7 +426,16 @@ export default class WhatsAppController {
             let file = this.el.inputDocument.files[0];
             let base64 = this.el.imgPanelDocumentPreview.src;
 
-            Message.sendDocument(this._contactActive.chatId, this._user.email, file, base64);
+            if (file.type === 'application/pdf') {
+                Base64.toFile(base64).then(filePreview => {
+                    Message.sendDocument(this._contactActive.chatId, this._user.email,
+                        file, filePreview, this.el.infoPanelDocumentPreview.innerHTML);
+                });
+            } else {
+                Message.sendDocument(this._contactActive.chatId, this._user.email, file);
+            }
+
+            this.el.btnClosePanelDocumentPreview.click();
         });
 
         this.el.btnClosePanelDocumentPreview.on('click', e => {
