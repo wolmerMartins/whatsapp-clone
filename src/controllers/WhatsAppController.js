@@ -1,5 +1,6 @@
 import Format from '../utils/Format';
 import CameraController from './CameraController';
+import ContactsController from './ContactsController';
 import MicrophoneController from './MicrophoneController';
 import DocumentPreviewController from './DocumentPreviewController';
 import Firebase from '../utils/Firebase';
@@ -491,11 +492,21 @@ export default class WhatsAppController {
         });
 
         this.el.btnCloseModalContacts.on('click', e => {
-            this.el.modalContacts.hide();
+            this._contactsController.close();
         });
 
         this.el.btnAttachContact.on('click', e => {
-            this.el.modalContacts.show();
+            this._contactsController = new ContactsController(this.el.modalContacts, this._user);
+            this._contactsController.on('select', contact => {
+                Message.sendContact(
+                    this._contactActive.chatId,
+                    this._user.email,
+                    contact
+                );
+
+                this._contactsController.close();
+            });
+            this._contactsController.open();
         });
 
         this.el.btnFinishMicrophone.on('click', e => {
