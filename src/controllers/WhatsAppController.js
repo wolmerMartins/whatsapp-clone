@@ -529,6 +529,16 @@ export default class WhatsAppController {
         });
 
         this.el.btnFinishMicrophone.on('click', e => {
+            this._MicrophoneController.on('recorded', (file, metadata) => {
+                Message.sendAudio(
+                    this._contactActive.chatId,
+                    this._user.email,
+                    file,
+                    metadata,
+                    this._user.photo
+                );
+            });
+
             this._MicrophoneController.stopRecorder();
             this.closeRecordMicrophone();
         });
