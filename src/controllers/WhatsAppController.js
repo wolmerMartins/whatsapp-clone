@@ -165,11 +165,10 @@ export default class WhatsAppController {
                     message.fromJSON(data);
                     
                     let me = (data.from === this._user.email);
+                    let view = message.getViewElement(me);
 
                     if (!this.el.panelMessagesContainer.querySelector(`#_${data.id}`)) {
                         if (!me) doc.ref.set({ status: 'read' }, { merge: true });
-
-                        let view = message.getViewElement(me);
 
                         this.el.panelMessagesContainer.appendChild(view);
                     } else {
@@ -180,8 +179,28 @@ export default class WhatsAppController {
 
                         if (data.type === 'document' && data.fileType) {
                             this.el.panelMessagesContainer.querySelector(`#_${data.id}`)
-                                .innerHTML = message.getViewElement(me).innerHTML;
+                                .innerHTML = view.innerHTML;
                         }
+                    }
+
+                    if (message.type === 'contact') {
+                        view.querySelector('.btn-message-send').on('click', e => {
+                            Chat.createIfNotExists(this._user.email, message.content.email)
+                                .then(chat => {
+                                    let contact = new User(message.content.email);
+
+                                    contact.on('datachange', data => {
+                                        contact.chatId = chat.id;
+                                        
+                                        this._user.addContact(contact);
+                                        this._user.chatId = chat.id;
+
+                                        contact.addContact(this._user);
+
+                                        this.setActiveChat(contact);
+                                    });
+                                });
+                        });
                     }
                 });
 
