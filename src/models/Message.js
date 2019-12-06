@@ -1,5 +1,6 @@
 import Model from './Model';
 import Format from '../utils/Format';
+import Upload from '../utils/Upload';
 import Firebase from '../utils/Firebase';
 
 class Message extends Model {
@@ -370,16 +371,7 @@ class Message extends Model {
     }
 
     static upload(from, file) {
-        return new Promise((s, f) => {
-            let fileRef = `${Date.now()}_${file.name}`;
-            let uploadTask = Firebase.hd().ref(from).child(fileRef).put(file);
-
-            uploadTask.on('state_changed',
-                e => console.log(`FILE UPLOAD: ${file.name}`, e),
-                err => f(err),
-                () => Firebase.hd().ref(from).child(fileRef).getDownloadURL()
-                    .then(url => s(url)));
-        });
+        return Upload.send(file, from);
     }
 
     static send(chatId, from, type, content) {

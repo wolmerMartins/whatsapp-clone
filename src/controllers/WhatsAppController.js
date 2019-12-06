@@ -6,6 +6,7 @@ import DocumentPreviewController from './DocumentPreviewController';
 import Firebase from '../utils/Firebase';
 import Message from '../models/Message';
 import Base64 from '../utils/Base64';
+import Upload from '../utils/Upload';
 import User from '../models/User';
 import Chat from '../models/Chat';
 
@@ -311,6 +312,19 @@ export default class WhatsAppController {
 
         this.el.btnClosePanelAddContact.on('click', e => {
             this.el.panelAddContact.removeClass('open');
+        });
+
+        this.el.inputProfilePhoto.on('change', e => {
+            if (this.el.inputProfilePhoto.files.length) {
+                let file = this.el.inputProfilePhoto.files[0];
+
+                Upload.send(file, this._user.email)
+                    .then(url => {
+                        this._user.photo = url;
+                        this._user.save()
+                            .then(() => this.el.btnClosePanelEditProfile.click());
+                    });
+            }
         });
 
         this.el.photoContainerEditProfile.on('click', e => {
