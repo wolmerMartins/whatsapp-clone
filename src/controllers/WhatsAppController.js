@@ -554,7 +554,6 @@ export default class WhatsAppController {
             this._MicrophoneController = new MicrophoneController();
 
             this._MicrophoneController.on('ready', stream => {
-                console.log('ready event', stream);
                 this._MicrophoneController.startRecorder();
             });
 
